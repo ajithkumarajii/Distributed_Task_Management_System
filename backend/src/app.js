@@ -1,10 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { connectDB } from "./db.js";
 import authRoutes from "./routes/auth.routes.js";
+import projectRoutes from "./routes/projects.routes.js";
+import taskRoutes from "./routes/tasks.routes.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const app = express();
 
@@ -21,16 +28,26 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/auth", authRoutes);
+app.use("/projects", projectRoutes);
+app.use("/tasks", taskRoutes);
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Error handler
+// Centralized error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal server error" });
+  console.error("Error:", err.message || err);
+
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal server error";
+
+  res.status(statusCode).json({
+    error: message,
+    timestamp: new Date().toISOString(),
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+  });
 });
 
 // Start server

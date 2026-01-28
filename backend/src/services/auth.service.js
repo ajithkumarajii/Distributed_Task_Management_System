@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 // Register a new user
-export const registerUser = async (name, email, password, role = "USER") => {
+export const registerUser = async (name, email, password, role = "MEMBER") => {
   try {
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -54,11 +54,11 @@ export const loginUser = async (email, password) => {
       throw new Error("Invalid email or password");
     }
 
-    // Generate JWT token
+    // Generate JWT token with 15m expiry for access token
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "24h" }
+      { expiresIn: "15m" }
     );
 
     return {
@@ -79,6 +79,54 @@ export const loginUser = async (email, password) => {
 export const getUserById = async (userId) => {
   try {
     const user = await User.findById(userId).select("-password");
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+// Get all users (admin-only)
+export const getAllUsers = async () => {
+  try {
+    const users = await User.find().select("-password");
+
+    return users.map((user) => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    }));
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+// Update user role (admin-only)
+export const updateUserRole = async (userId, newRole) => {
+  try {
+    // Validate role
+    const validRoles = ["ADMIN", "MANAGER", "MEMBER"];
+    if (!validRoles.includes(newRole)) {
+      throw new Error(`Invalid role. Must be one of: ${validRoles.join(", ")}`);
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role: newRole },
+      { new: true, runValidators: true }
+    ).select("-password");
+
     if (!user) {
       throw new Error("User not found");
     }

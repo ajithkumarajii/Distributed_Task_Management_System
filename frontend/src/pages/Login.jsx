@@ -291,7 +291,8 @@ export default function Login() {
         const response = await registerUser(
           formData.name,
           formData.email,
-          formData.password
+          formData.password,
+          formData.confirmPassword
         );
 
         setSuccess("Registration successful! Switching to login...");
