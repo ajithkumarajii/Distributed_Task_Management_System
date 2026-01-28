@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { connectDB } from "./db.js";
+import { errorHandler } from "./utils/errors.js";
 import authRoutes from "./routes/auth.routes.js";
 import projectRoutes from "./routes/projects.routes.js";
 import taskRoutes from "./routes/tasks.routes.js";
@@ -18,13 +19,18 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB on startup
 connectDB();
 
 // Routes
 app.get("/health", (req, res) => {
-  res.json({ message: "Server running", timestamp: new Date().toISOString() });
+  res.json({
+    success: true,
+    message: "Server running",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use("/auth", authRoutes);
@@ -33,28 +39,21 @@ app.use("/tasks", taskRoutes);
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
-// Centralized error handler
-app.use((err, req, res, next) => {
-  console.error("Error:", err.message || err);
-
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal server error";
-
-  res.status(statusCode).json({
-    error: message,
+  res.status(404).json({
+    success: false,
+    error: "Route not found",
     timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
+
+// Centralized error handler (must be last)
+app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
 export default app;

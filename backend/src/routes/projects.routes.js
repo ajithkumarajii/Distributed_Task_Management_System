@@ -1,52 +1,140 @@
 import express from "express";
+import * as projectController from "../controllers/project.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js";
-import { authorizeRole } from "../middleware/role.middleware.js";
+import { validateRequest } from "../validators/project.validator.js";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  projectIdSchema,
+  addProjectMemberSchema,
+  updateProjectMemberSchema,
+} from "../validators/project.validator.js";
 
 const router = express.Router();
 
-// Protect all project routes with authentication
+// All project routes require authentication
 router.use(verifyToken);
 
-// GET /projects - viewable by all authenticated users
-router.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Projects retrieved successfully",
-    projects: [],
-    user: req.user,
-  });
-});
+/**
+ * Project CRUD Operations
+ */
 
-// POST /projects - creatable by ADMIN and MANAGER
-router.post("/", authorizeRole("ADMIN", "MANAGER"), (req, res) => {
-  res.status(201).json({
-    message: "Project created successfully",
-    project: { id: 1, name: req.body.name, createdBy: req.user.id },
-  });
-});
+// POST /projects - Create a new project
+router.post("/", validateRequest(createProjectSchema), projectController.createProject);
 
-// GET /projects/:id - viewable by all authenticated users
-router.get("/:id", (req, res) => {
-  res.status(200).json({
-    message: "Project retrieved successfully",
-    project: { id: req.params.id },
-    user: req.user,
-  });
-});
+// GET /projects - Get all projects
+router.get("/", projectController.getProjects);
 
-// PUT /projects/:id - updatable by ADMIN and MANAGER
-router.put("/:id", authorizeRole("ADMIN", "MANAGER"), (req, res) => {
-  res.status(200).json({
-    message: "Project updated successfully",
-    project: { id: req.params.id, ...req.body },
-  });
-});
+// GET /projects/:projectId - Get a specific project
+router.get(
+  "/:projectId",
+  validateRequest(projectIdSchema),
+  projectController.getProject
+);
 
-// DELETE /projects/:id - deletable by ADMIN only
-router.delete("/:id", authorizeRole("ADMIN"), (req, res) => {
-  res.status(200).json({
-    message: "Project deleted successfully",
-    projectId: req.params.id,
-  });
-});
+// PUT /projects/:projectId - Update a project
+router.put(
+  "/:projectId",
+  validateRequest(projectIdSchema),
+  validateRequest(updateProjectSchema),
+  projectController.updateProject
+);
+
+// DELETE /projects/:projectId - Delete a project
+router.delete(
+  "/:projectId",
+  validateRequest(projectIdSchema),
+  projectController.deleteProject
+);
+
+/**
+ * Project Member Management
+ */
+
+// POST /projects/:projectId/members - Add member
+router.post(
+  "/:projectId/members",
+  validateRequest(projectIdSchema),
+  validateRequest(addProjectMemberSchema),
+  projectController.addMember
+);
+
+// DELETE /projects/:projectId/members/:memberId - Remove member
+router.delete(
+  "/:projectId/members/:memberId",
+  (req, res, next) => {
+    // Validate both IDs
+    try {
+      const projectSchema = projectIdSchema.parse({
+        params: { projectId: req.params.projectId },
+      });
+      if (!/^[0-9a-fA-F]{24}$/.test(req.params.memberId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Validation failed",
+          details: "Invalid member ID format",
+        });
+      }
+      req.validated = {
+        params: {
+          projectId: req.params.projectId,
+          memberId: req.params.memberId,
+        },
+      };
+      next();
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join("; "),
+      });
+    }
+  },
+  projectController.removeMember
+);
+
+// PUT /projects/:projectId/members/:memberId - Update member role
+router.put(
+  "/:projectId/members/:memberId",
+  (req, res, next) => {
+    // Validate IDs and body
+    try {
+      const projectSchema = projectIdSchema.parse({
+        params: { projectId: req.params.projectId },
+      });
+      if (!/^[0-9a-fA-F]{24}$/.test(req.params.memberId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Validation failed",
+          details: "Invalid member ID format",
+        });
+      }
+      updateProjectMemberSchema.parse({
+        body: req.body,
+        params: {},
+        query: {},
+      });
+      req.validated = {
+        params: {
+          projectId: req.params.projectId,
+          memberId: req.params.memberId,
+        },
+        body: req.body,
+      };
+      next();
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: error.errors
+          ?.map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join("; ") || error.message,
+      });
+    }
+  },
+  projectController.updateMemberRole
+);
 
 export default router;

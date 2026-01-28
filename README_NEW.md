@@ -1,23 +1,28 @@
 # Distributed Task Management System (DTMS)
 
-A modern, scalable task management application built with Node.js/Express backend, React frontend, and MongoDB database. Designed for team collaboration with secure authentication and role-based access control.
+A production-grade backend system for managing projects and tasks with **role-based access control (RBAC)**, **clean architecture**, and **enterprise-level validation**.
 
-## 🚀 Features
+## 🎯 System Overview
 
-- **Secure Authentication**: JWT-based authentication with bcrypt password hashing
-- **User Management**: Register, login, and profile management
-- **Role-Based Access**: Support for different user roles (Admin, Manager, User)
-- **Modern UI**: Beautiful, responsive interface with gradient design
-- **Database**: MongoDB with Mongoose ODM for data persistence
-- **Production Ready**: Clean architecture with proper error handling
+The DTMS implements a complete domain model with:
+- **Project Management**: Create, manage projects with multiple team members
+- **Task Management**: Full CRUD operations with workflow validation
+- **Role-Based Access Control**: ADMIN, MANAGER, and MEMBER roles
+- **Status Workflow**: TODO → IN_PROGRESS → DONE with validation
+- **Task Assignment**: Assign tasks to team members
+- **Comments & Collaboration**: Add comments to tasks for team communication
+- **Pagination & Filtering**: Efficient data retrieval with filters
+- **Comprehensive Validation**: Input validation using Zod
 
 ## 📋 Tech Stack
 
 ### Backend
-- **Runtime**: Node.js
+- **Runtime**: Node.js 16+
 - **Framework**: Express.js 5.2.1
-- **Database**: MongoDB with Mongoose 8.0.0
+- **Database**: MongoDB 5.0+ with Mongoose 8.0.0
 - **Authentication**: JWT (jsonwebtoken 9.0.3)
+- **Validation**: Zod
+- **Security**: bcrypt for password hashing
 - **Security**: Bcrypt 6.0.0 for password hashing
 - **Utilities**: dotenv for environment management
 
