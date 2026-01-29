@@ -1,0 +1,215 @@
+.taskListContainer {
+  display: flex;
+  flexDirection: column;
+  gap: 20px;
+}
+
+.filterButtons {
+  display: flex;
+  gap: 12px;
+  flexWrap: wrap;
+}
+
+.filterButton {
+  padding: 10px 16px;
+  fontSize: 14px;
+  fontWeight: 600;
+  border: 2px solid #e2e8f0;
+  backgroundColor: white;
+  borderRadius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  alignItems: center;
+  gap: 6px;
+}
+
+.filterButton:hover {
+  borderColor: #cbd5e1;
+  backgroundColor: #f8fafc;
+}
+
+.filterButton.active {
+  borderColor: #667eea;
+  backgroundColor: #667eea;
+  color: white;
+}
+
+.tasksList {
+  display: grid;
+  gridTemplateColumns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .tasksList {
+    gridTemplateColumns: 1fr;
+  }
+}
+
+.taskCard {
+  backgroundColor: white;
+  borderRadius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  boxShadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.taskCard:hover {
+  boxShadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  borderColor: #cbd5e1;
+}
+
+.taskHeader {
+  display: flex;
+  justifyContent: space-between;
+  alignItems: flex-start;
+  gap: 12px;
+  marginBottom: 12px;
+}
+
+.taskTitleSection {
+  display: flex;
+  alignItems: flex-start;
+  gap: 8px;
+  flex: 1;
+}
+
+.priority {
+  fontSize: 18px;
+  marginTop: 2px;
+  flexShrink: 0;
+}
+
+.taskTitle {
+  fontSize: 16px;
+  fontWeight: 700;
+  color: #1e293b;
+  margin: 0;
+  wordBreak: break-word;
+}
+
+.taskActions {
+  display: flex;
+  gap: 8px;
+  flexShrink: 0;
+}
+
+.statusButton {
+  padding: 6px 12px;
+  fontSize: 12px;
+  fontWeight: 600;
+  border: 2px solid currentColor;
+  backgroundColor: white;
+  borderRadius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  whiteSpace: nowrap;
+}
+
+.statusButton:hover {
+  opacity: 0.8;
+}
+
+.deleteButton {
+  padding: 6px 10px;
+  fontSize: 14px;
+  border: none;
+  backgroundColor: #fee2e2;
+  borderRadius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  backgroundColor: #fecaca;
+}
+
+.taskDescription {
+  fontSize: 14px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  lineHeight: 1.5;
+  display: -webkit-box;
+  -webkit-lineClamp: 2;
+  -webkit-boxOrient: vertical;
+  overflow: hidden;
+}
+
+.taskFooter {
+  display: flex;
+  flexWrap: wrap;
+  gap: 8px;
+  alignItems: center;
+  fontSize: 12px;
+  color: #64748b;
+}
+
+.assignedTo {
+  padding: 4px 8px;
+  backgroundColor: #f1f5f9;
+  borderRadius: 4px;
+  whiteSpace: nowrap;
+}
+
+.dueDate {
+  padding: 4px 8px;
+  backgroundColor: #f1f5f9;
+  borderRadius: 4px;
+  whiteSpace: nowrap;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  color: white;
+  borderRadius: 4px;
+  fontSize: 11px;
+  fontWeight: 600;
+  marginLeft: auto;
+  whiteSpace: nowrap;
+}
+
+.emptyState {
+  padding: 40px 20px;
+  textAlign: center;
+  color: #94a3b8;
+  fontSize: 16px;
+  backgroundColor: #f8fafc;
+  borderRadius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.loadingState {
+  padding: 40px 20px;
+  textAlign: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid #e2e8f0;
+  borderTop: 3px solid #667eea;
+  borderRadius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorState {
+  padding: 20px;
+  backgroundColor: #fee2e2;
+  border: 1px solid #fecaca;
+  borderRadius: 8px;
+  color: #dc2626;
+  fontSize: 14px;
+}
+
+.errorState p {
+  margin: 0;
+}

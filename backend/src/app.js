@@ -7,7 +7,6 @@ import { connectDB } from "./db.js";
 import { errorHandler } from "./utils/errors.js";
 import authRoutes from "./routes/auth.routes.js";
 import projectRoutes from "./routes/projects.routes.js";
-import taskRoutes from "./routes/tasks.routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,7 +34,6 @@ app.get("/health", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/projects", projectRoutes);
-app.use("/tasks", taskRoutes);
 
 // 404 handler
 app.use((req, res) => {

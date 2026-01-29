@@ -74,3 +74,66 @@ export const setToken = (token) => {
 export const isAuthenticated = () => {
   return !!getToken();
 };
+
+// ===== Project APIs =====
+
+// Get all projects
+export const getProjects = async () => {
+  return apiCall("/projects", "GET");
+};
+
+// Get a specific project
+export const getProject = async (projectId) => {
+  return apiCall(`/projects/${projectId}`, "GET");
+};
+
+// Get project members (for task assignment)
+export const getProjectMembers = async (projectId) => {
+  return apiCall(`/projects/${projectId}/members`, "GET");
+};
+
+// Create a new project
+export const createProject = async (projectData) => {
+  return apiCall("/projects", "POST", projectData);
+};
+
+// ===== Task APIs =====
+
+// Create a new task
+export const createTask = async (projectId, taskData) => {
+  return apiCall(`/projects/${projectId}/tasks`, "POST", taskData);
+};
+
+// Get tasks for a project
+export const getProjectTasks = async (projectId, filters = {}) => {
+  const queryString = new URLSearchParams(filters).toString();
+  const url = queryString
+    ? `/projects/${projectId}/tasks?${queryString}`
+    : `/projects/${projectId}/tasks`;
+  return apiCall(url, "GET");
+};
+
+// Get a specific task
+export const getTask = async (taskId) => {
+  return apiCall(`/tasks/${taskId}`, "GET");
+};
+
+// Update a task
+export const updateTask = async (taskId, taskData) => {
+  return apiCall(`/tasks/${taskId}`, "PUT", taskData);
+};
+
+// Update task status
+export const updateTaskStatus = async (taskId, status) => {
+  return apiCall(`/tasks/${taskId}`, "PUT", { status });
+};
+
+// Delete a task
+export const deleteTask = async (taskId) => {
+  return apiCall(`/tasks/${taskId}`, "DELETE");
+};
+
+// Get task statistics
+export const getTaskStats = async (projectId) => {
+  return apiCall(`/projects/${projectId}/tasks/stats`, "GET");
+};

@@ -97,11 +97,14 @@ export const createTask = async (projectId, userId, userRole, data) => {
     ...data,
     projectId,
     createdBy: userId,
+    status: "TODO", // Default status
   });
 
-  return task
+  const populatedTask = await task
     .populate("assignedTo", "name email")
     .populate("createdBy", "name email");
+
+  return populatedTask;
 };
 
 /**
@@ -191,6 +194,7 @@ export const getTaskById = async (taskId, userId, userRole) => {
 /**
  * Update task
  * Only assigned user, project owner/manager, or ADMIN can update
+ * IMPORTANT: Only assigned user can update task status
  */
 export const updateTask = async (taskId, userId, userRole, data) => {
   const { task, project, isOwner, isMember, isAdmin, isAssignee } =
@@ -211,9 +215,21 @@ export const updateTask = async (taskId, userId, userRole, data) => {
     throw errors.forbidden("You don't have permission to update this task");
   }
 
-  // Validate status transition if status is being updated
+  // Track if status changed for notifications
+  let statusChanged = false;
+
+  // STRICT: Only assigned user or project managers/owner can change status
   if (data.status && data.status !== task.status) {
+    const canChangeStatus = isAdmin || isOwner || isAssignee || memberRole === "OWNER" || memberRole === "MANAGER";
+    
+    if (!canChangeStatus) {
+      throw errors.forbidden(
+        "Only the assigned user or project manager can change task status"
+      );
+    }
+
     validateStatusTransition(task.status, data.status);
+    statusChanged = true;
 
     // Set completedAt when status is DONE
     if (data.status === "DONE") {
@@ -241,9 +257,11 @@ export const updateTask = async (taskId, userId, userRole, data) => {
   Object.assign(task, data);
   await task.save();
 
-  return task
+  const updatedTask = await task
     .populate("assignedTo", "name email")
     .populate("createdBy", "name email");
+
+  return updatedTask;
 };
 
 /**

@@ -307,3 +307,33 @@ export const updateProjectMember = async (
 
   return project.populate("members.userId", "name email role");
 };
+
+/**
+ * Get all users in a project (for task assignment dropdown)
+ */
+export const getProjectMembers = async (projectId, userId, userRole) => {
+  const project = await Project.findById(projectId).populate(
+    "members.userId",
+    "name email"
+  );
+  if (!project) throw errors.notFound("Project");
+
+  // Check access
+  const isOwner = project.ownerId.toString() === userId;
+  const isMember = project.members?.some(
+    (m) => m.userId._id.toString() === userId
+  );
+  const isAdmin = userRole === "ADMIN";
+
+  if (!isOwner && !isMember && !isAdmin) {
+    throw errors.forbidden("You don't have access to this project");
+  }
+
+  return project.members.map((m) => ({
+    id: m.userId._id,
+    name: m.userId.name,
+    email: m.userId.email,
+    role: m.role,
+  }));
+};
+

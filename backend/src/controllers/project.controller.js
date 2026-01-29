@@ -134,8 +134,24 @@ export const removeMember = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * Update member role in project
+/** * Get project members (for task assignment dropdown)
+ * GET /projects/:projectId/members
+ */
+export const getProjectMembers = asyncHandler(async (req, res) => {
+  const members = await projectService.getProjectMembers(
+    req.validated.params.projectId,
+    req.user.id,
+    req.user.role
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Project members retrieved successfully",
+    data: members,
+  });
+});
+
+/** * Update member role in project
  * PUT /projects/:projectId/members/:memberId
  */
 export const updateMemberRole = asyncHandler(async (req, res) => {

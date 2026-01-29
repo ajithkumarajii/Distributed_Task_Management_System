@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
 import Login from "./pages/Login";
-import { getCurrentUser, logoutUser } from "./services/api";
+import TaskCreationModal from "./components/TaskCreationModal";
+import ProjectCreationModal from "./components/ProjectCreationModal";
+import TaskList from "./components/TaskList";
+import { getCurrentUser, logoutUser, getProjects } from "./services/api";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [taskRefreshKey, setTaskRefreshKey] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -15,6 +23,8 @@ function App() {
           const response = await getCurrentUser();
           setUser(response.user);
           setIsLoggedIn(true);
+          // Load projects
+          await loadProjects();
         } catch (err) {
           console.error("Failed to fetch user:", err);
           localStorage.removeItem("token");
@@ -27,10 +37,36 @@ function App() {
     checkAuth();
   }, []);
 
+  const loadProjects = async () => {
+    try {
+      const response = await getProjects();
+      setProjects(response.data || []);
+      if (response.data && response.data.length > 0) {
+        setSelectedProject(response.data[0]._id);
+      }
+    } catch (err) {
+      console.error("Failed to load projects:", err);
+    }
+  };
+
   const handleLogout = () => {
     logoutUser();
     setUser(null);
     setIsLoggedIn(false);
+    setProjects([]);
+    setSelectedProject(null);
+  };
+
+  const handleProjectCreated = (newProject) => {
+    // Add new project to list
+    setProjects((prev) => [newProject, ...prev]);
+    // Set as selected project
+    setSelectedProject(newProject._id);
+  };
+
+  const handleTaskCreated = () => {
+    // Refresh task list
+    setTaskRefreshKey((prev) => prev + 1);
   };
 
   if (loading) {
@@ -74,66 +110,63 @@ function App() {
             <div style={styles.headerSection}>
               <div>
                 <h2 style={styles.welcomeTitle}>Welcome back, {user.name}! 👋</h2>
-                <p style={styles.headerSubtitle}>Here's your task management dashboard</p>
+                <p style={styles.headerSubtitle}>Manage your team's tasks efficiently</p>
               </div>
-              <div style={styles.dateDisplay}>{new Date().toLocaleDateString()}</div>
-            </div>
-
-            <div style={styles.cardsContainer}>
-              <div style={styles.card}>
-                <div style={styles.cardIcon}>📋</div>
-                <h3 style={styles.cardTitle}>Active Tasks</h3>
-                <p style={styles.cardNumber}>0</p>
-                <p style={styles.cardDescription}>No tasks assigned yet</p>
-              </div>
-
-              <div style={styles.card}>
-                <div style={styles.cardIcon}>✅</div>
-                <h3 style={styles.cardTitle}>Completed</h3>
-                <p style={styles.cardNumber}>0</p>
-                <p style={styles.cardDescription}>Keep up the great work!</p>
-              </div>
-
-              <div style={styles.card}>
-                <div style={styles.cardIcon}>👥</div>
-                <h3 style={styles.cardTitle}>Team Members</h3>
-                <p style={styles.cardNumber}>1</p>
-                <p style={styles.cardDescription}>Just you for now</p>
-              </div>
-
-              <div style={styles.card}>
-                <div style={styles.cardIcon}>⚡</div>
-                <h3 style={styles.cardTitle}>Performance</h3>
-                <p style={styles.cardNumber}>100%</p>
-                <p style={styles.cardDescription}>All set!</p>
+              <div style={styles.buttonGroup}>
+                <button
+                  onClick={() => setIsProjectModalOpen(true)}
+                  style={styles.createProjectButton}
+                >
+                  📁 Create Project
+                </button>
+                <button
+                  onClick={() => setIsTaskModalOpen(true)}
+                  style={styles.createTaskButton}
+                >
+                  + Create Task
+                </button>
               </div>
             </div>
 
-            <div style={styles.infoSection}>
-              <h3 style={styles.sectionTitle}>Account Information</h3>
-              <div style={styles.infoGrid}>
-                <div style={styles.infoCard}>
-                  <span style={styles.infoLabel}>Email</span>
-                  <span style={styles.infoValue}>{user.email}</span>
-                </div>
-                <div style={styles.infoCard}>
-                  <span style={styles.infoLabel}>Role</span>
-                  <span style={styles.infoValue}>{user.role}</span>
-                </div>
-                <div style={styles.infoCard}>
-                  <span style={styles.infoLabel}>Account Status</span>
-                  <span style={styles.infoValue}>Active ✓</span>
-                </div>
-              </div>
+            <div style={styles.projectSelector}>
+              <label style={styles.projectLabel}>Current Project:</label>
+              <select
+                value={selectedProject || ""}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                style={styles.projectSelect}
+              >
+                {projects.map((project) => (
+                  <option key={project._id} value={project._id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.taskManagementSection}>
+              <h3 style={styles.sectionTitle}>Task Management</h3>
+              <TaskList projectId={selectedProject} refreshKey={taskRefreshKey} />
             </div>
 
             <div style={styles.comingSoonSection}>
               <h3 style={styles.comingSoonTitle}>🚀 Coming Soon</h3>
               <p style={styles.comingSoonText}>
-                Task creation, team collaboration, real-time updates, and advanced analytics are being developed.
+                Advanced analytics, team collaboration features, and real-time notifications are being developed.
               </p>
             </div>
           </div>
+
+          <TaskCreationModal
+            isOpen={isTaskModalOpen}
+            onClose={() => setIsTaskModalOpen(false)}
+            onTaskCreated={handleTaskCreated}
+          />
+
+          <ProjectCreationModal
+            isOpen={isProjectModalOpen}
+            onClose={() => setIsProjectModalOpen(false)}
+            onProjectCreated={handleProjectCreated}
+          />
         </div>
       ) : (
         <Login />
@@ -372,6 +405,69 @@ const styles = {
     color: "#64748b",
     margin: 0,
     lineHeight: "1.6",
+  },
+  projectSelector: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "32px",
+    padding: "16px",
+    backgroundColor: "white",
+    borderRadius: "8px",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+  },
+  projectLabel: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#334155",
+    whiteSpace: "nowrap",
+  },
+  projectSelect: {
+    padding: "8px 12px",
+    fontSize: "14px",
+    border: "1px solid #cbd5e1",
+    borderRadius: "6px",
+    backgroundColor: "white",
+    color: "#1e293b",
+    cursor: "pointer",
+    minWidth: "200px",
+  },
+  buttonGroup: {
+    display: "flex",
+    gap: "12px",
+    alignItems: "center",
+  },
+  createProjectButton: {
+    padding: "12px 20px",
+    fontSize: "14px",
+    fontWeight: "700",
+    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.4)",
+  },
+  createTaskButton: {
+    padding: "12px 24px",
+    fontSize: "14px",
+    fontWeight: "700",
+    backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
+  },
+  taskManagementSection: {
+    backgroundColor: "white",
+    padding: "28px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+    marginBottom: "28px",
   },
 };
 
