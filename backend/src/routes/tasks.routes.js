@@ -106,7 +106,36 @@ router.put(
   taskController.updateTask
 );
 
-// PATCH /tasks/:taskId/status - Update task status
+// PATCH /tasks/:taskId - Update task (with or without status change)
+router.patch(
+  "/tasks/:taskId",
+  (req, res, next) => {
+    // Validate task ID
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(req.params.taskId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Validation failed",
+          details: "Invalid task ID format",
+        });
+      }
+      req.validated = {
+        params: { taskId: req.params.taskId },
+        body: req.body,
+      };
+      next();
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: error.message,
+      });
+    }
+  },
+  taskController.updateTask
+);
+
+// PATCH /tasks/:taskId/status - Update task status (legacy endpoint)
 router.patch(
   "/tasks/:taskId/status",
   validateRequest(taskIdSchema),

@@ -123,9 +123,14 @@ export const updateTask = async (taskId, taskData) => {
   return apiCall(`/tasks/${taskId}`, "PUT", taskData);
 };
 
+// Patch a task (can be partial updates including status)
+export const patchTask = async (taskId, taskData) => {
+  return apiCall(`/tasks/${taskId}`, "PATCH", taskData);
+};
+
 // Update task status
 export const updateTaskStatus = async (taskId, status) => {
-  return apiCall(`/tasks/${taskId}`, "PUT", { status });
+  return apiCall(`/tasks/${taskId}`, "PATCH", { status });
 };
 
 // Delete a task

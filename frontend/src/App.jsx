@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import TaskCreationModal from "./components/TaskCreationModal";
 import ProjectCreationModal from "./components/ProjectCreationModal";
 import TaskList from "./components/TaskList";
+import TaskDashboard from "./components/TaskDashboard";
 import { getCurrentUser, logoutUser, getProjects } from "./services/api";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [taskRefreshKey, setTaskRefreshKey] = useState(0);
+  const [useDashboard, setUseDashboard] = useState(true); // Toggle between old TaskList and new TaskDashboard
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -144,8 +146,12 @@ function App() {
             </div>
 
             <div style={styles.taskManagementSection}>
-              <h3 style={styles.sectionTitle}>Task Management</h3>
-              <TaskList projectId={selectedProject} refreshKey={taskRefreshKey} />
+              <h3 style={styles.sectionTitle}>Task Dashboard</h3>
+              {useDashboard ? (
+                <TaskDashboard projectId={selectedProject} user={user} />
+              ) : (
+                <TaskList projectId={selectedProject} refreshKey={taskRefreshKey} />
+              )}
             </div>
 
             <div style={styles.comingSoonSection}>
